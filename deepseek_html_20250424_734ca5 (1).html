@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tournament Bracket Generator</title>
+    <style>
+        :root {
+            --primary-color: #1976d2;
+            --primary-dark: #0d47a1;
+            --primary-light: #bbdefb;
+            --accent-color: #4caf50;
+            --text-color: #333333;
+            --light-gray: #f5f5f5;
+            --dark-bg: #273d83;
+            --card-bg: #ffffff;
+            --white: #ffffff;
+            --border-color: #90caf9;
+            --winner-color: #2e7d32;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        h2, h3 {
+            color: var(--primary-dark);
+        }
+        
+        h1{
+            color: var(--primary-light);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-light);
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .input-section, .bracket-section {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+        
+        .input-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        label {
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            resize: vertical;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            background-color: var(--white);
+            color: var(--text-color);
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 120px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.secondary {
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+        
+        button.secondary:hover {
+            background-color: var(--primary-light);
+        }
+        
+        .bracket {
+            display: flex;
+            overflow-x: auto;
+            padding: 20px 0;
+            gap: 20px;
+        }
+        
+        .round {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            min-width: 240px;
+        }
+        
+        .round-title {
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: var(--white);
+            background-color: var(--primary-color);
+            padding: 8px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .match {
+            margin: 15px 0;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--white);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+        
+        .player {
+            padding: 10px;
+            margin: 6px 0;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s;
+            background-color: var(--light-gray);
+        }
+        
+        .player:hover {
+            background-color: var(--primary-light);
+            transform: translateX(5px);
+        }
+        
+        .winner {
+            background-color: #e8f5e9;
+            font-weight: 600;
+            color: var(--winner-color);
+            border-left: 4px solid var(--winner-color);
+        }
+        
+        .winner::before {
+            content: "✓";
+            margin-right: 8px;
+            color: var(--winner-color);
+        }
+        
+        .final-match {
+            background-color: var(--primary-light);
+            border: 2px solid var(--primary-color);
+        }
+        
+        .final-match .round-title {
+            background-color: var(--primary-dark);
+            color: white;
+        }
+        
+        .vs {
+            text-align: center;
+            padding: 8px;
+            font-size: 0.9em;
+            color: #757575;
+            font-weight: 500;
+        }
+        
+        .connector {
+            position: relative;
+            height: 0;
+        }
+        
+        .connector::before, .connector::after {
+            content: '';
+            position: absolute;
+            background-color: var(--primary-color);
+        }
+        
+        .connector::before {
+            width: 20px;
+            height: 2px;
+            top: 50%;
+            right: -20px;
+        }
+        
+        .connector::after {
+            width: 2px;
+            height: 100%;
+            top: 0;
+            right: 0;
+        }
+        
+        .contestant-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .contestant-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: var(--light-gray);
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .contestant-item:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .contestant-item input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-grow: 1;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .checkbox-option input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-color);
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .status.info {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .status.success {
+            background-color: #e8f5e9;
+            color: var(--winner-color);
+            border-left: 4px solid var(--winner-color);
+        }
+        
+        .status.warning {
+            background-color: #fff8e1;
+            color: #ff8f00;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .winner-display {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: var(--primary-light);
+            border-radius: 8px;
+            border: 2px solid var(--primary-color);
+            display: none;
+        }
+        
+        .winner-display h3 {
+            margin-top: 0;
+            color: var(--primary-dark);
+        }
+        
+        .winner-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin: 10px 0;
+        }
+        
+        .select-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .select-actions button {
+            flex: none;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .checkbox-group {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- The rest of your HTML content remains exactly the same -->
+    <div class="container">
+        <h1>Tournament Bracket Generator</h1>
+        
+        <div class="input-section">
+            <h2>Enter Contestants</h2>
+            <div class="option-group">
+                <label for="contestants">Enter contestants (separated by spaces, commas, or new lines):</label>
+                <textarea id="contestants" placeholder="Player1, Player2, Player3
+Player4 Player5 Player6
+Player7"></textarea>
+            </div>
+            
+            <div class="checkbox-group">
+                <div class="checkbox-option">
+                    <input type="checkbox" id="space-separator" checked>
+                    <label for="space-separator">Split by spaces</label>
+                </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" id="comma-separator" checked>
+                    <label for="comma-separator">Split by commas</label>
+                </div>
+                <div class="checkbox-option">
+                    <input type="checkbox" id="newline-separator" checked>
+                    <label for="newline-separator">Split by new lines</label>
+                </div>
+            </div>
+            
+            <div id="contestant-container" class="contestant-list" style="display: none;">
+                <h3>Selected Contestants:</h3>
+                <div class="select-actions">
+                    <button id="select-all" class="secondary">Select All</button>
+                    <button id="unselect-all" class="secondary">Unselect All</button>
+                </div>
+                <!-- Contestant checkboxes will appear here -->
+            </div>
+            
+            <div class="button-group">
+                <button id="process">Process Contestants</button>
+                <button id="generate" disabled>Generate Bracket</button>
+                <button id="reset" class="secondary">Reset All</button>
+            </div>
+            
+            <div id="status" class="status info" style="display: none;"></div>
+        </div>
+        
+        <div class="bracket-section">
+            <h2>Tournament Bracket</h2>
+            <div id="winner-display" class="winner-display">
+                <h3>Tournament Champion</h3>
+                <div class="winner-name" id="winner-name">-</div>
+            </div>
+            <div id="bracket" class="bracket">
+                <div class="status info">No bracket generated yet. Enter contestants and click "Generate Bracket".</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // The JavaScript remains exactly the same as in the previous version
+        document.addEventListener('DOMContentLoaded', function() {
+            const contestantsTextarea = document.getElementById('contestants');
+            const processButton = document.getElementById('process');
+            const generateButton = document.getElementById('generate');
+            const resetButton = document.getElementById('reset');
+            const bracketDiv = document.getElementById('bracket');
+            const contestantContainer = document.getElementById('contestant-container');
+            const statusDiv = document.getElementById('status');
+            const winnerDisplay = document.getElementById('winner-display');
+            const winnerName = document.getElementById('winner-name');
+            const selectAllButton = document.getElementById('select-all');
+            const unselectAllButton = document.getElementById('unselect-all');
+            
+            const spaceSeparator = document.getElementById('space-separator');
+            const commaSeparator = document.getElementById('comma-separator');
+            const newlineSeparator = document.getElementById('newline-separator');
+            
+            let currentBracket = null;
+            let selectedContestants = [];
+            
+            processButton.addEventListener('click', processContestants);
+            generateButton.addEventListener('click', generateBracket);
+            resetButton.addEventListener('click', resetAll);
+            selectAllButton.addEventListener('click', selectAllContestants);
+            unselectAllButton.addEventListener('click', unselectAllContestants);
+            
+            function processContestants() {
+                const contestantsText = contestantsTextarea.value.trim();
+                if (!contestantsText) {
+                    showStatus('Please enter at least one contestant', 'warning');
+                    return;
+                }
+                
+                // Determine which separators to use
+                const separators = [];
+                if (spaceSeparator.checked) separators.push(' ');
+                if (commaSeparator.checked) separators.push(',');
+                if (newlineSeparator.checked) separators.push('\n');
+                
+                if (separators.length === 0) {
+                    showStatus('Please select at least one separator method', 'warning');
+                    return;
+                }
+                
+                // Split by all selected separators
+                let contestants = [contestantsText];
+                separators.forEach(sep => {
+                    contestants = contestants.flatMap(item => 
+                        item.split(sep).map(s => s.trim()).filter(s => s.length > 0)
+                    );
+                });
+                
+                // Remove duplicates
+                contestants = [...new Set(contestants)];
+                
+                if (contestants.length < 2) {
+                    showStatus('Please enter at least two contestants', 'warning');
+                    return;
+                }
+                
+                // Display contestants with checkboxes
+                displayContestantCheckboxes(contestants);
+                showStatus(`Found ${contestants.length} unique contestants. Select which to include.`, 'info');
+                
+                // Enable generate button if we have enough contestants
+                generateButton.disabled = false;
+            }
+            
+            function displayContestantCheckboxes(contestants) {
+                contestantContainer.innerHTML = '<h3>Selected Contestants:</h3>';
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'select-actions';
+                
+                const selectAll = document.createElement('button');
+                selectAll.className = 'secondary';
+                selectAll.textContent = 'Select All';
+                selectAll.addEventListener('click', selectAllContestants);
+                
+                const unselectAll = document.createElement('button');
+                unselectAll.className = 'secondary';
+                unselectAll.textContent = 'Unselect All';
+                unselectAll.addEventListener('click', unselectAllContestants);
+                
+                actionsDiv.appendChild(selectAll);
+                actionsDiv.appendChild(unselectAll);
+                contestantContainer.appendChild(actionsDiv);
+                
+                contestants.forEach((contestant, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'contestant-item';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `contestant-${index}`;
+                    checkbox.checked = true;
+                    checkbox.addEventListener('change', updateSelectedContestants);
+                    
+                    const label = document.createElement('label');
+                    label.className = 'checkbox-label';
+                    label.htmlFor = `contestant-${index}`;
+                    label.textContent = contestant;
+                    
+                    item.appendChild(checkbox);
+                    item.appendChild(label);
+                    contestantContainer.appendChild(item);
+                });
+                
+                contestantContainer.style.display = 'block';
+                updateSelectedContestants();
+            }
+            
+            function selectAllContestants() {
+                const checkboxes = contestantContainer.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                updateSelectedContestants();
+            }
+            
+            function unselectAllContestants() {
+                const checkboxes = contestantContainer.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                updateSelectedContestants();
+            }
+            
+            function updateSelectedContestants() {
+                selectedContestants = [];
+                const checkboxes = contestantContainer.querySelectorAll('input[type="checkbox"]');
+                
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const label = checkbox.nextElementSibling;
+                        selectedContestants.push(label.textContent);
+                    }
+                });
+                
+                generateButton.disabled = selectedContestants.length < 2;
+                
+                if (selectedContestants.length >= 2) {
+                    showStatus(`${selectedContestants.length} contestants selected. Ready to generate bracket.`, 'success');
+                } else {
+                    showStatus('Select at least 2 contestants to generate a bracket', 'warning');
+                }
+            }
+            
+            function generateBracket() {
+                if (selectedContestants.length < 2) {
+                    showStatus('Please select at least two contestants', 'warning');
+                    return;
+                }
+                
+                currentBracket = createBracket(selectedContestants);
+                renderBracket(currentBracket);
+                showStatus('Bracket generated! Click on winners to advance them.', 'success');
+                winnerDisplay.style.display = 'none';
+            }
+            
+            function createBracket(contestants) {
+                // Create a copy of the array to avoid modifying the original
+                let players = [...contestants];
+                let bracket = [];
+                
+                // If the number of players isn't a power of 2, add byes
+                const nextPowerOfTwo = Math.pow(2, Math.ceil(Math.log2(players.length)));
+                while (players.length < nextPowerOfTwo) {
+                    players.push('BYE');
+                }
+                
+                // First round matches
+                let round = [];
+                for (let i = 0; i < players.length; i += 2) {
+                    round.push({
+                        player1: players[i],
+                        player2: players[i+1],
+                        winner: null
+                    });
+                }
+                bracket.push(round);
+                
+                // Subsequent rounds
+                while (round.length > 1) {
+                    let nextRound = [];
+                    for (let i = 0; i < round.length; i += 2) {
+                        nextRound.push({
+                            player1: null,
+                            player2: null,
+                            winner: null
+                        });
+                    }
+                    bracket.push(nextRound);
+                    round = nextRound;
+                }
+                
+                return bracket;
+            }
+            
+            function renderBracket(bracket) {
+                bracketDiv.innerHTML = '';
+                
+                if (!bracket || bracket.length === 0) {
+                    bracketDiv.innerHTML = '<div class="status info">No bracket generated yet. Enter contestants and click "Generate Bracket".</div>';
+                    winnerDisplay.style.display = 'none';
+                    return;
+                }
+                
+                bracket.forEach((round, roundIndex) => {
+                    const roundDiv = document.createElement('div');
+                    roundDiv.className = 'round';
+                    
+                    const roundTitle = document.createElement('div');
+                    roundTitle.className = 'round-title';
+                    
+                    if (roundIndex === bracket.length - 1) {
+                        roundTitle.textContent = 'Final';
+                    } else if (roundIndex === bracket.length - 2) {
+                        roundTitle.textContent = 'Semifinals';
+                    } else if (roundIndex === bracket.length - 3) {
+                        roundTitle.textContent = 'Quarterfinals';
+                    } else {
+                        roundTitle.textContent = `Round ${roundIndex + 1}`;
+                    }
+                    
+                    roundDiv.appendChild(roundTitle);
+                    
+                    round.forEach((match, matchIndex) => {
+                        const matchDiv = document.createElement('div');
+                        matchDiv.className = 'match' + (roundIndex === bracket.length - 1 ? ' final-match' : '');
+                        
+                        // Player 1
+                        const player1Div = document.createElement('div');
+                        player1Div.className = 'player' + (match.winner === match.player1 ? ' winner' : '');
+                        player1Div.textContent = match.player1 || 'TBD';
+                        if (match.player1 && match.player1 !== 'BYE' && roundIndex < bracket.length - 1) {
+                            player1Div.addEventListener('click', () => setWinner(bracket, roundIndex, matchIndex, match.player1));
+                        }
+                        
+                        // vs text
+                        const vsDiv = document.createElement('div');
+                        vsDiv.className = 'vs';
+                        vsDiv.textContent = 'vs';
+                        
+                        // Player 2
+                        const player2Div = document.createElement('div');
+                        player2Div.className = 'player' + (match.winner === match.player2 ? ' winner' : '');
+                        player2Div.textContent = match.player2 || 'TBD';
+                        if (match.player2 && match.player2 !== 'BYE' && roundIndex < bracket.length - 1) {
+                            player2Div.addEventListener('click', () => setWinner(bracket, roundIndex, matchIndex, match.player2));
+                        }
+                        
+                        // Connector for all but the last round
+                        const connectorDiv = document.createElement('div');
+                        connectorDiv.className = 'connector';
+                        
+                        matchDiv.appendChild(player1Div);
+                        matchDiv.appendChild(vsDiv);
+                        matchDiv.appendChild(player2Div);
+                        if (roundIndex < bracket.length - 1) {
+                            matchDiv.appendChild(connectorDiv);
+                        }
+                        
+                        roundDiv.appendChild(matchDiv);
+                    });
+                    
+                    bracketDiv.appendChild(roundDiv);
+                });
+                
+                // Check if tournament is complete
+                const finalRound = bracket[bracket.length - 1];
+                if (finalRound && finalRound[0] && finalRound[0].winner) {
+                    winnerName.textContent = finalRound[0].winner;
+                    winnerDisplay.style.display = 'block';
+                } else {
+                    winnerDisplay.style.display = 'none';
+                }
+            }
+            
+            function setWinner(bracket, roundIndex, matchIndex, winner) {
+                const match = bracket[roundIndex][matchIndex];
+                match.winner = winner;
+                
+                // If this isn't the final round, propagate the winner to the next round
+                if (roundIndex < bracket.length - 1) {
+                    const nextRoundIndex = roundIndex + 1;
+                    const nextMatchIndex = Math.floor(matchIndex / 2);
+                    const nextMatch = bracket[nextRoundIndex][nextMatchIndex];
+                    
+                    if (matchIndex % 2 === 0) {
+                        nextMatch.player1 = winner;
+                    } else {
+                        nextMatch.player2 = winner;
+                    }
+                }
+                
+                renderBracket(bracket);
+            }
+            
+            function resetAll() {
+                contestantsTextarea.value = '';
+                contestantContainer.style.display = 'none';
+                contestantContainer.innerHTML = '';
+                bracketDiv.innerHTML = '<div class="status info">No bracket generated yet. Enter contestants and click "Generate Bracket".</div>';
+                winnerDisplay.style.display = 'none';
+                currentBracket = null;
+                selectedContestants = [];
+                generateButton.disabled = true;
+                statusDiv.style.display = 'none';
+                
+                // Reset checkboxes
+                spaceSeparator.checked = true;
+                commaSeparator.checked = true;
+                newlineSeparator.checked = true;
+            }
+            
+            function showStatus(message, type) {
+                statusDiv.textContent = message;
+                statusDiv.className = `status ${type}`;
+                statusDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
